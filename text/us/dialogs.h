@@ -2100,3 +2100,7 @@ Arrgghh!\n\
 Anyone entering this cave\n\
 without permission will\n\
 meet certain disaster."))
+
+
+DEFINE_DIALOG(DIALOG_LUIGI, 1, 2, 95, 200, _("\
+You need the 5 keys - xxxx."))

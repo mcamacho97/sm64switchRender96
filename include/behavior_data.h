@@ -150,7 +150,6 @@ extern const BehaviorScript bhvIgloo[];
 extern const BehaviorScript bhvBowserKey[];
 extern const BehaviorScript bhvGrandStar[];
 extern const BehaviorScript bhvBetaBooKey[];
-extern const BehaviorScript bhvAlphaBooKey[];
 extern const BehaviorScript bhvBulletBill[];
 extern const BehaviorScript bhvWhitePuffSmoke[];
 extern const BehaviorScript bhvUnused1820[];
@@ -542,5 +541,9 @@ extern const BehaviorScript bhvEndBirds1[];
 extern const BehaviorScript bhvEndBirds2[];
 extern const BehaviorScript bhvIntroScene[];
 extern const BehaviorScript bhvUnusedFakeStar[];
+extern const BehaviorScript bhvYoshiEgg[];
+extern const BehaviorScript bhvBlargg[];
+extern const BehaviorScript bhvFriendlyBlargg[];
+extern const BehaviorScript bhvCharacterSwitchPipe[];
 
 #endif // BEHAVIOR_DATA_H

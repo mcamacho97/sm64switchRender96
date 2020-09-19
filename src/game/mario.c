@@ -38,6 +38,7 @@
 #ifdef BETTERCAMERA
 #include "bettercamera.h"
 #endif
+#include "sgi/utils/characters.h"
 
 u32 unused80339F10;
 s8 filler80339F1C[20];
@@ -793,14 +794,14 @@ static u32 set_mario_action_airborne(struct MarioState *m, u32 action, u32 actio
 
     switch (action) {
         case ACT_DOUBLE_JUMP:
-            set_mario_y_vel_based_on_fspeed(m, 52.0f, 0.25f);
+            set_mario_y_vel_based_on_fspeed(m, 52.0f * getCharacterMultiplier(), 0.25f);
             m->forwardVel *= 0.8f;
             break;
 
         case ACT_BACKFLIP:
             m->marioObj->header.gfx.unk38.animID = -1;
             m->forwardVel = -16.0f;
-            set_mario_y_vel_based_on_fspeed(m, 62.0f, 0.0f);
+            set_mario_y_vel_based_on_fspeed(m, 62.0f * getCharacterMultiplier(), 0.0f);
             break;
 
         case ACT_TRIPLE_JUMP:
@@ -815,7 +816,7 @@ static u32 set_mario_action_airborne(struct MarioState *m, u32 action, u32 actio
         case ACT_WATER_JUMP:
         case ACT_HOLD_WATER_JUMP:
             if (actionArg == 0) {
-                set_mario_y_vel_based_on_fspeed(m, 42.0f, 0.0f);
+                set_mario_y_vel_based_on_fspeed(m, 42.0f * getCharacterMultiplier(), 0.0f);
             }
             break;
 
@@ -825,19 +826,19 @@ static u32 set_mario_action_airborne(struct MarioState *m, u32 action, u32 actio
             break;
 
         case ACT_RIDING_SHELL_JUMP:
-            set_mario_y_vel_based_on_fspeed(m, 42.0f, 0.25f);
+            set_mario_y_vel_based_on_fspeed(m, 42.0f * getCharacterMultiplier(), 0.25f);
             break;
 
         case ACT_JUMP:
         case ACT_HOLD_JUMP:
             m->marioObj->header.gfx.unk38.animID = -1;
-            set_mario_y_vel_based_on_fspeed(m, 42.0f, 0.25f);
+            set_mario_y_vel_based_on_fspeed(m, 42.0f * getCharacterMultiplier(), 0.25f);
             m->forwardVel *= 0.8f;
             break;
 
         case ACT_WALL_KICK_AIR:
         case ACT_TOP_OF_POLE_JUMP:
-            set_mario_y_vel_based_on_fspeed(m, 62.0f, 0.0f);
+            set_mario_y_vel_based_on_fspeed(m, 62.0f * getCharacterMultiplier(), 0.0f);
             if (m->forwardVel < 24.0f) {
                 m->forwardVel = 24.0f;
             }
@@ -852,7 +853,7 @@ static u32 set_mario_action_airborne(struct MarioState *m, u32 action, u32 actio
 
         case ACT_STEEP_JUMP:
             m->marioObj->header.gfx.unk38.animID = -1;
-            set_mario_y_vel_based_on_fspeed(m, 42.0f, 0.25f);
+            set_mario_y_vel_based_on_fspeed(m, 42.0f * getCharacterMultiplier(), 0.25f);
             m->faceAngle[0] = -0x2000;
             break;
 
@@ -963,6 +964,10 @@ static u32 set_mario_action_cutscene(struct MarioState *m, u32 action, UNUSED u3
     switch (action) {
         case ACT_EMERGE_FROM_PIPE:
             m->vel[1] = 52.0f;
+            break;
+
+        case ACT_CHARACTER_SWITCH:
+            m->vel[1] = 64.0f;
             break;
 
         case ACT_FALL_AFTER_STAR_GRAB:
@@ -1929,12 +1934,19 @@ void init_mario_from_save_file(void) {
     gMarioState->statusForCamera = &gPlayerCameraState[0];
     gMarioState->marioBodyState = &gBodyStates[0];
     gMarioState->controller = &gControllers[0];
-    gMarioState->animation = &D_80339D10;
-
     gMarioState->numCoins = 0;
     gMarioState->numStars =
         save_file_get_total_star_count(gCurrSaveFileNum - 1, COURSE_MIN - 1, COURSE_MAX - 1);
-    gMarioState->numKeys = 0;
+    gMarioState->numKeys = save_file_get_keys(gCurrSaveFileNum - 1);
+
+    setCharacterModel(save_file_get_player_model(gCurrSaveFileNum - 1));
+
+    if (isLuigi()==1)
+        gMarioState->animation = &Data_LuigiAnims;
+    else
+        gMarioState->animation = &D_80339D10;
+
+    set_notification_status(save_file_get_keys(gCurrSaveFileNum - 1) >= 10);
 
     gMarioState->numLives = 4;
     gMarioState->health = 0x880;

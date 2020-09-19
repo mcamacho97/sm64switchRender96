@@ -361,7 +361,14 @@ void bhv_klepto_update(void) {
 
             if (o->oAnimState == KLEPTO_ANIM_STATE_HOLDING_CAP) {
                 save_file_clear_flags(SAVE_FLAG_CAP_ON_KLEPTO);
-                spawn_object(o, MODEL_MARIOS_CAP, bhvNormalCap);
+				
+				if(isLuigi()==1) {
+					spawn_object(o, MODEL_LUIGIS_CAP, bhvNormalCap);
+				}
+				else { 
+					spawn_object(o, MODEL_MARIOS_CAP, bhvNormalCap);
+				}
+					
             } else if (o->oAnimState == KLEPTO_ANIM_STATE_HOLDING_STAR) {
                 spawn_default_star(-5550.0f, 300.0f, -930.0f);
             }
