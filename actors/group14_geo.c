@@ -14,3 +14,4 @@
 #include "whomp/geo.inc.c"
 #include "chain_ball/geo.inc.c"
 #include "chain_chomp/geo.inc.c"
+#include "koopa_without_shell/geo.inc.c"

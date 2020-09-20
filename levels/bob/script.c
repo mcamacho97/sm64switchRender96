@@ -22,6 +22,7 @@ static const LevelScript script_func_local_1[] = {
     OBJECT(/*model*/ MODEL_NONE,                  /*pos*/ -2050,     0, -3069, /*angle*/ 0, 25, 0,   /*behParam*/ 0x00000000, /*beh*/ bhvOpenableGrill),
     OBJECT(/*model*/ MODEL_PURPLE_SWITCH,         /*pos*/ -2283,     0, -3682, /*angle*/ 0, 27, 0,   /*behParam*/ 0x00000000, /*beh*/ bhvFloorSwitchGrills),
     OBJECT(/*model*/ MODEL_CHECKERBOARD_PLATFORM, /*pos*/  1612,   300,  4611, /*angle*/ 0, 0, 0,    /*behParam*/ 0x00280000, /*beh*/ bhvCheckerboardElevatorGroup),
+    OBJECT(/*model*/ MODEL_BETA_BOO_KEY, /*pos*/ 7141, 2030, -6711, /*angle*/ 0, 0, 0, /*behParam*/ 0, /*beh*/ bhvBetaBooKey),
     RETURN(),
 };
 
