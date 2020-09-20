@@ -6,12 +6,11 @@
 #include "pc/platform.h"
 #include "pc/fs/fs.h"
 
-#define FILENAME_FORMAT "%s/render96_save_file_%d.sav"
+#define FILENAME_FORMAT "%s/sm64_save_file_%d.sav"
 #define NUM_COURSES 15
 #define NUM_BONUS_COURSES 10
 #define NUM_FLAGS 21
 #define NUM_CAP_ON 4
-#define NUM_KEYS 10
 
 const char *sav_flags[NUM_FLAGS] = {
     "file_exists", "wing_cap", "metal_cap", "vanish_cap", "key_1", "key_2",
@@ -36,10 +35,6 @@ const char *cap_on_types[NUM_CAP_ON] = {
 
 const char *sound_modes[3] = {
     "stereo", "mono", "headset"
-};
-
-const char *sgi_bonus[1] = {
-    "collected_keys"
 };
 
 /* Get current timestamp string */
@@ -177,17 +172,7 @@ static s32 write_text_save(s32 fileIndex) {
             fprintf(file, "type = %s\n", cap_on_types[i]);
             break;
         }
-    }    
-
-    char keys[NUM_KEYS+1] = "";
-
-    fprintf(file, "\n[sgi]\n");
-    for (int id = 0; id < NUM_KEYS; id++) {
-        snprintf(keys, NUM_KEYS+1, "%s%d", keys, save_file_taken_key(fileIndex, id));
-        printf("id : %d, key: %d\n", id, keys);
-    }    
-
-    fprintf(file, "keys = \"%s\"\n", keys);
+    }
 
     savedata = &gSaveBuffer.files[fileIndex][0];
     switch(savedata->capLevel) {
@@ -203,9 +188,6 @@ static s32 write_text_save(s32 fileIndex) {
         default:
             break;
     }
-
-    fprintf(file, "character = \"%d\"\n", save_file_get_player_model(fileIndex));
-
     if (savedata->capLevel) {
         fprintf(file, "area = %d\n", savedata->capArea);
     }
@@ -228,9 +210,6 @@ static s32 read_text_save(s32 fileIndex) {
     
     u32 i, flag, coins, stars, starFlags;
     u32 capArea;
-    u32 playerModel;
-
-    char keys[NUM_KEYS];
     
     if (snprintf(filename, sizeof(filename), FILENAME_FORMAT, fs_writepath, fileIndex) < 0)
         return -1;
@@ -342,22 +321,7 @@ static s32 read_text_save(s32 fileIndex) {
             gSaveBuffer.files[fileIndex][0].capArea = capArea; 
         }
     }
-
-    value = ini_get(savedata, "sgi", "keys");
-    if (value) {
-        s8 i;
-        sscanf(value, "%s", &keys);
-        for(; i < NUM_KEYS; i++){
-            gSaveBuffer.files[fileIndex][0].courseKeys[i] = (keys[i] == '1');
-        }
-    }
     
-    value = ini_get(savedata, "sgi", "character");
-    if (value) {
-        sscanf(value, "%d", &playerModel);
-        gSaveBuffer.files[fileIndex][0].currentPlayerModel = playerModel;
-    }
-
     // Good, file exists for gSaveBuffer
     gSaveBuffer.files[fileIndex][0].flags |= SAVE_FLAG_FILE_EXISTS;
 

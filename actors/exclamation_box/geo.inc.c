@@ -1,4 +1,4 @@
-
+// 0x0F000694
 const GeoLayout exclamation_box_geo[] = {
    GEO_CULLING_RADIUS(300),
    GEO_OPEN_NODE(),
@@ -6,10 +6,10 @@ const GeoLayout exclamation_box_geo[] = {
       GEO_OPEN_NODE(),
          GEO_SWITCH_CASE(4, geo_switch_anim_state),
          GEO_OPEN_NODE(),
-            GEO_DISPLAY_LIST(1, exclamation_box_000_displaylist_mesh_mat_override_fly_0),
-            GEO_DISPLAY_LIST(1, exclamation_box_000_displaylist_mesh_mat_override_metal_1),
-            GEO_DISPLAY_LIST(1, exclamation_box_000_displaylist_mesh_mat_override_invis_2),
-            GEO_DISPLAY_LIST(1, exclamation_box_000_displaylist_mesh_mat_override_yellow_3),
+            GEO_DISPLAY_LIST(LAYER_OPAQUE, exclamation_box_seg8_dl_08019318),
+            GEO_DISPLAY_LIST(LAYER_OPAQUE, exclamation_box_seg8_dl_08019378),
+            GEO_DISPLAY_LIST(LAYER_OPAQUE, exclamation_box_seg8_dl_080193D8),
+            GEO_DISPLAY_LIST(LAYER_OPAQUE, exclamation_box_seg8_dl_08019438),
          GEO_CLOSE_NODE(),
       GEO_CLOSE_NODE(),
    GEO_CLOSE_NODE(),

@@ -27,6 +27,9 @@ TARGET_RPI ?= 0
 # Build for Emscripten/WebGL
 TARGET_WEB ?= 0
 
+# Build for Nintendo Switch
+TARGET_SWITCH ?= 1
+
 # Makeflag to enable OSX fixes
 OSX_BUILD ?= 0
 
@@ -43,9 +46,9 @@ TEXTURE_FIX ?= 0
 # Enable extended options menu by default
 EXT_OPTIONS_MENU ?= 1
 # Disable text-based save-files by default
-TEXTSAVES ?= 1
+TEXTSAVES ?= 0
 # Load resources from external files
-EXTERNAL_DATA ?= 1
+EXTERNAL_DATA ?= 0
 # Enable Discord Rich Presence
 DISCORDRPC ?= 0
 
@@ -58,17 +61,17 @@ NO_LDIV ?= 0
 
 # Renderers: GL, GL_LEGACY, D3D11, D3D12
 RENDER_API ?= GL
-# Window managers: SDL2, DXGI (forced if D3D11 or D3D12 in RENDER_API)
+# Window managers: SDL1, SDL2, DXGI (forced if D3D11 or D3D12 in RENDER_API)
 WINDOW_API ?= SDL2
-# Audio backends: SDL2
+# Audio backends: SDL1, SDL2
 AUDIO_API ?= SDL2
-# Controller backends (can have multiple, space separated): SDL2
+# Controller backends (can have multiple, space separated): SDL2, SDL1
 CONTROLLER_API ?= SDL2
 
 # Misc settings for EXTERNAL_DATA
 
-LEGACY_RES ?= 1
 BASEDIR ?= res
+BASEPACK ?= base.zip
 
 # Automatic settings for PC port(s)
 
@@ -86,7 +89,7 @@ else
   endif
 endif
 
-ifeq ($(TARGET_WEB),0)
+ifeq ($(TARGET_WEB)$(TARGET_RPI)$(TARGET_SWITCH),000)
   ifeq ($(HOST_OS),Windows)
     WINDOWS_BUILD := 1
   endif
@@ -137,14 +140,12 @@ TARGET := sm64.$(VERSION)
 VERSION_CFLAGS := -D$(VERSION_DEF) -D_LANGUAGE_C
 VERSION_ASFLAGS := --defsym $(VERSION_DEF)=1
 
-# Stuff for showing the git hash in the intro
+# Stuff for showing the git hash in the intro on nightly builds
 # From https://stackoverflow.com/questions/44038428/include-git-commit-hash-and-or-branch-name-in-c-c-source
-GIT_HASH=`git rev-parse --short HEAD`
-COMPILE_TIME=`date -u +'%Y-%m-%d %H:%M:%S UTC'`
-VERSION_CFLAGS += -DGIT_HASH="\"$(GIT_HASH)\"" -DCOMPILE_TIME="\"$(COMPILE_TIME)\""
-
 ifeq ($(shell git rev-parse --abbrev-ref HEAD),nightly)
-  VERSION_CFLAGS += -DNIGHTLY
+  GIT_HASH=`git rev-parse --short HEAD`
+  COMPILE_TIME=`date -u +'%Y-%m-%d %H:%M:%S UTC'`
+  VERSION_CFLAGS += -DNIGHTLY -DGIT_HASH="\"$(GIT_HASH)\"" -DCOMPILE_TIME="\"$(COMPILE_TIME)\""
 endif
 
 # Microcode
@@ -190,19 +191,23 @@ GRUCODE_ASFLAGS := $(GRUCODE_ASFLAGS) --defsym $(GRUCODE_DEF)=1
 VERSION_CFLAGS := $(VERSION_CFLAGS) -DNON_MATCHING -DAVOID_UB
 
 ifeq ($(TARGET_RPI),1) # Define RPi to change SDL2 title & GLES2 hints
-      VERSION_CFLAGS += -DUSE_GLES
+  VERSION_CFLAGS += -DUSE_GLES
+endif
+
+ifeq ($(TARGET_SWITCH),1)
+  VERSION_CFLAGS += -DUSE_GLES -DTARGET_SWITCH
 endif
 
 ifeq ($(OSX_BUILD),1) # Modify GFX & SDL2 for OSX GL
-     VERSION_CFLAGS += -DOSX_BUILD
+  VERSION_CFLAGS += -DOSX_BUILD
 endif
-
-VERSION_ASFLAGS := --defsym AVOID_UB=1
-COMPARE := 0
 
 ifeq ($(TARGET_WEB),1)
   VERSION_CFLAGS := $(VERSION_CFLAGS) -DTARGET_WEB -DUSE_GLES
 endif
+
+VERSION_ASFLAGS := --defsym AVOID_UB=1
+COMPARE := 0
 
 # Check backends
 
@@ -254,6 +259,8 @@ BUILD_DIR_BASE := build
 
 ifeq ($(TARGET_WEB),1)
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_web
+else ifeq ($(TARGET_SWITCH),1)
+  BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_nx
 else
   BUILD_DIR := $(BUILD_DIR_BASE)/$(VERSION)_pc
 endif
@@ -286,10 +293,13 @@ LEVEL_DIRS := $(patsubst levels/%,%,$(dir $(wildcard levels/*/header.h)))
 # Directories containing source files
 
 # Hi, I'm a PC
-SRC_DIRS := src src/engine src/game src/audio src/menu src/buffers actors levels bin data assets src/pc src/pc/gfx src/pc/audio src/pc/controller src/pc/fs src/pc/fs/packtypes src/sgi src/sgi/utils
+SRC_DIRS := src src/engine src/game src/audio src/menu src/buffers actors levels bin data assets src/pc src/pc/gfx src/pc/audio src/pc/controller src/pc/fs src/pc/fs/packtypes
 ASM_DIRS :=
 
 ifeq ($(DISCORDRPC),1)
+  ifneq ($(TARGET_SWITCH)$(TARGET_WEB)$(TARGET_RPI),000)
+    $(error Discord RPC does not work on this target)
+  endif
   SRC_DIRS += src/pc/discord
 endif
 
@@ -358,7 +368,7 @@ CXX_FILES := $(foreach dir,$(SRC_DIRS),$(wildcard $(dir)/*.cpp))
 S_FILES := $(foreach dir,$(ASM_DIRS),$(wildcard $(dir)/*.s))
 GODDARD_C_FILES := $(foreach dir,$(GODDARD_SRC_DIRS),$(wildcard $(dir)/*.c))
 
-GENERATED_C_FILES := $(BUILD_DIR)/assets/mario_anim_data.c $(BUILD_DIR)/assets/luigi_anim_data.c $(BUILD_DIR)/assets/demo_data.c \
+GENERATED_C_FILES := $(BUILD_DIR)/assets/mario_anim_data.c $(BUILD_DIR)/assets/demo_data.c \
   $(addprefix $(BUILD_DIR)/bin/,$(addsuffix _skybox.c,$(notdir $(basename $(wildcard textures/skyboxes/*.png)))))
 
 ULTRA_C_FILES := \
@@ -433,6 +443,30 @@ ENDIAN_BITWIDTH := $(BUILD_DIR)/endian-and-bitwidth
 
 # Huge deleted N64 section was here
 
+ifeq ($(TARGET_SWITCH),1)
+  ifeq ($(strip $(DEVKITPRO)),)
+    $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>/devkitpro")
+  endif
+  export PATH := $(DEVKITPRO)/devkitA64/bin:$(PATH)
+  PORTLIBS ?= $(DEVKITPRO)/portlibs/switch
+  LIBNX ?= $(DEVKITPRO)/libnx
+  CROSS ?= aarch64-none-elf-
+  SDLCROSS :=
+  CC := $(CROSS)gcc
+  CXX := $(CROSS)g++
+  STRIP := $(CROSS)strip
+  NXARCH := -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIC -ftls-model=local-exec
+  APP_TITLE := Super Mario 64
+  APP_AUTHOR := Nintendo, n64decomp team, sm64pc team
+  APP_VERSION := 1_master_$(VERSION)
+  APP_ICON := nx_icon.jpg
+  INCLUDE_CFLAGS += -isystem$(LIBNX)/include -I$(PORTLIBS)/include
+  OPT_FLAGS := -O2
+endif
+
+# for some reason sdl-config in dka64 is not prefixed, while pkg-config is
+SDLCROSS ?= $(CROSS)
+
 AS := $(CROSS)as
 
 ifeq ($(OSX_BUILD),1)
@@ -476,14 +510,16 @@ else # Linux & other builds
 endif
 
 PYTHON := python3
-SDLCONFIG := $(CROSS)sdl2-config
+SDLCONFIG := $(SDLCROSS)sdl2-config
 
 # configure backend flags
 
 BACKEND_CFLAGS := -DRAPI_$(RENDER_API)=1 -DWAPI_$(WINDOW_API)=1 -DAAPI_$(AUDIO_API)=1
 # can have multiple controller APIs
 BACKEND_CFLAGS += $(foreach capi,$(CONTROLLER_API),-DCAPI_$(capi)=1)
-BACKEND_LDFLAGS :=
+BACKEND_LDFLAG0S :=
+
+SDL1_USED := 0
 SDL2_USED := 0
 
 # for now, it's either SDL+GL or DXGI+DirectX, so choose based on WAPI
@@ -494,30 +530,42 @@ ifeq ($(WINDOW_API),DXGI)
   endif
   BACKEND_LDFLAGS += -ld3dcompiler -ldxgi -ldxguid
   BACKEND_LDFLAGS += -lsetupapi -ldinput8 -luser32 -lgdi32 -limm32 -lole32 -loleaut32 -lshell32 -lwinmm -lversion -luuid -static
-else ifeq ($(WINDOW_API),SDL2)
+else ifeq ($(findstring SDL,$(WINDOW_API)),SDL)
   ifeq ($(WINDOWS_BUILD),1)
     BACKEND_LDFLAGS += -lglew32 -lglu32 -lopengl32
-  else ifeq ($(TARGET_RPI),1)
+  else ifneq ($(TARGET_RPI)$(TARGET_SWITCH),00)
     BACKEND_LDFLAGS += -lGLESv2
   else ifeq ($(OSX_BUILD),1)
     BACKEND_LDFLAGS += -framework OpenGL `pkg-config --libs glew`
   else
     BACKEND_LDFLAGS += -lGL
   endif
-  SDL_USED := 2
 endif
 
-ifeq ($(AUDIO_API),SDL2)
-  SDL_USED := 2
+ifneq (,$(findstring SDL2,$(AUDIO_API)$(WINDOW_API)$(CONTROLLER_API)))
+  SDL2_USED := 1
 endif
 
-ifneq (,$(findstring SDL,$(CONTROLLER_API)))
-  SDL_USED := 2
+ifneq (,$(findstring SDL1,$(AUDIO_API)$(WINDOW_API)$(CONTROLLER_API)))
+  SDL1_USED := 1
+endif
+
+ifeq ($(SDL1_USED)$(SDL2_USED),11)
+  $(error Cannot link both SDL1 and SDL2 at the same time)
 endif
 
 # SDL can be used by different systems, so we consolidate all of that shit into this
-ifeq ($(SDL_USED),2)
-  BACKEND_CFLAGS += -DHAVE_SDL2=1 `$(SDLCONFIG) --cflags`
+
+ifeq ($(SDL2_USED),1)
+  SDLCONFIG := $(SDLCROSS)sdl2-config
+  BACKEND_CFLAGS += -DHAVE_SDL2=1
+else ifeq ($(SDL1_USED),1)
+  SDLCONFIG := $(SDLCROSS)sdl-config
+  BACKEND_CFLAGS += -DHAVE_SDL1=1
+endif
+
+ifneq ($(SDL1_USED)$(SDL2_USED),00)
+  BACKEND_CFLAGS += `$(SDLCONFIG) --cflags`
   ifeq ($(WINDOWS_BUILD),1)
     BACKEND_LDFLAGS += `$(SDLCONFIG) --static-libs` -lsetupapi -luser32 -limm32 -lole32 -loleaut32 -lshell32 -lwinmm -lversion
   else
@@ -532,6 +580,10 @@ ifeq ($(WINDOWS_BUILD),1)
 else ifeq ($(TARGET_WEB),1)
   CC_CHECK := $(CC) -fsyntax-only -fsigned-char $(BACKEND_CFLAGS) $(INCLUDE_CFLAGS) -Wall -Wextra -Wno-format-security $(VERSION_CFLAGS) $(GRUCODE_CFLAGS) -s USE_SDL=2
   CFLAGS := $(OPT_FLAGS) $(INCLUDE_CFLAGS) $(BACKEND_CFLAGS) $(VERSION_CFLAGS) $(GRUCODE_CFLAGS) -fno-strict-aliasing -fwrapv -s USE_SDL=2
+
+else ifeq ($(TARGET_SWITCH),1)
+  CC_CHECK := $(CC) $(NXARCH) -fsyntax-only -fsigned-char $(BACKEND_CFLAGS) $(INCLUDE_CFLAGS) -Wall -Wextra -Wno-format-security $(VERSION_CFLAGS) $(GRUCODE_CFLAGS) -D__SWITCH__=1
+  CFLAGS := $(NXARCH) $(OPT_FLAGS) $(INCLUDE_CFLAGS) $(BACKEND_CFLAGS) $(VERSION_CFLAGS) $(GRUCODE_CFLAGS) -fno-strict-aliasing -ftls-model=local-exec -fPIC -fwrapv -D__SWITCH__=1
 
 # Linux / Other builds below
 else
@@ -625,6 +677,9 @@ else ifeq ($(TARGET_RPI),1)
 else ifeq ($(OSX_BUILD),1)
   LDFLAGS := -lm $(BACKEND_LDFLAGS) -no-pie -lpthread
 
+else ifeq ($(TARGET_SWITCH),1)
+  LDFLAGS := -specs=$(LIBNX)/switch.specs $(NXARCH) $(OPT_FLAGS) -no-pie -L$(LIBNX)/lib $(BACKEND_LDFLAGS) -lstdc++ -lnx -lm
+
 else
   LDFLAGS := $(BITS) -march=$(TARGET_ARCH) -lm $(BACKEND_LDFLAGS) -no-pie -lpthread
   ifeq ($(DISCORDRPC),1)
@@ -663,6 +718,9 @@ ZEROTERM = $(PYTHON) $(TOOLS_DIR)/zeroterm.py
 ######################## Targets #############################
 
 all: $(EXE)
+ifeq ($(TARGET_SWITCH),1)
+all: $(EXE).nro
+endif
 
 # thank you apple very cool
 ifeq ($(HOST_OS),Darwin)
@@ -673,7 +731,7 @@ endif
 
 ifeq ($(EXTERNAL_DATA),1)
 
-BASEPACK_PATH := $(BUILD_DIR)/$(BASEDIR)/
+BASEPACK_PATH := $(BUILD_DIR)/$(BASEDIR)/$(BASEPACK)
 BASEPACK_LST := $(BUILD_DIR)/basepack.lst
 
 # depend on resources as well
@@ -697,7 +755,7 @@ $(BASEPACK_LST): $(EXE)
 
 # prepares the resource ZIP with base data
 $(BASEPACK_PATH): $(BASEPACK_LST)
-	@$(PYTHON) $(TOOLS_DIR)/mkzip.py $(BASEPACK_LST) $(BASEPACK_PATH) $(LEGACY_RES)
+	@$(PYTHON) $(TOOLS_DIR)/mkzip.py $(BASEPACK_LST) $(BASEPACK_PATH)
 
 endif
 
@@ -899,9 +957,6 @@ $(BUILD_DIR)/include/level_headers.h: levels/level_headers.h.in
 $(BUILD_DIR)/assets/mario_anim_data.c: $(wildcard assets/anims/*.inc.c)
 	$(PYTHON) tools/mario_anims_converter.py > $@
 
-$(BUILD_DIR)/assets/luigi_anim_data.c: $(wildcard assets/luigi_anims/*.inc.c)
-	$(PYTHON) tools/luigi_anims_converter.py > $@
-
 $(BUILD_DIR)/assets/demo_data.c: assets/demo_data.json $(wildcard assets/demos/*.bin)
 	$(PYTHON) tools/demo_data_converter.py assets/demo_data.json $(VERSION_CFLAGS) > $@
 
@@ -979,6 +1034,23 @@ $(BUILD_DIR)/%.o: %.s
 
 $(EXE): $(O_FILES) $(MIO0_FILES:.mio0=.o) $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(BUILD_DIR)/$(RPC_LIBS)
 	$(LD) -L $(BUILD_DIR) -o $@ $(O_FILES) $(SOUND_OBJ_FILES) $(ULTRA_O_FILES) $(GODDARD_O_FILES) $(LDFLAGS)
+
+ifeq ($(TARGET_SWITCH), 1)
+
+# add `--icon=$(APP_ICON)` to this when we get a suitable icon
+%.nro: %.stripped %.nacp
+	@elf2nro $< $@ --nacp=$*.nacp
+	@echo built ... $(notdir $@)
+
+%.nacp:
+	@nacptool --create "$(APP_TITLE)" "$(APP_AUTHOR)" "$(APP_VERSION)" $@ $(NACPFLAGS)
+	@echo built ... $(notdir $@)
+
+%.stripped: %
+	@$(STRIP) -o $@ $<
+	@echo stripped ... $(notdir $<)
+
+endif
 
 .PHONY: all clean distclean default diff test load libultra res
 .PRECIOUS: $(BUILD_DIR)/bin/%.elf $(SOUND_BIN_DIR)/%.ctl $(SOUND_BIN_DIR)/%.tbl $(SOUND_SAMPLE_TABLES) $(SOUND_BIN_DIR)/%.s $(BUILD_DIR)/%

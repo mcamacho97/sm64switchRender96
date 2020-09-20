@@ -1,4 +1,3 @@
-#include "sgi/utils/characters.h"
 // Mr. Blizzard hitbox
 struct ObjectHitbox sMrBlizzardHitbox = {
     /* interactType:      */ INTERACT_MR_BLIZZARD,
@@ -217,13 +216,7 @@ static void mr_blizzard_act_death(void) {
             if (o->oAnimState) {
                 save_file_clear_flags(SAVE_FLAG_CAP_ON_MR_BLIZZARD);
 
-				if(isLuigi()==1) {
-					cap = spawn_object_relative(0, 5, 105, 0, o, MODEL_LUIGIS_CAP, bhvNormalCap);
-				}
-				else { 
-					cap = spawn_object_relative(0, 5, 105, 0, o, MODEL_MARIOS_CAP, bhvNormalCap);
-				}
-				
+                cap = spawn_object_relative(0, 5, 105, 0, o, MODEL_MARIOS_CAP, bhvNormalCap);
                 if (cap != NULL) {
                     cap->oMoveAngleYaw = o->oFaceAngleYaw + (o->oFaceAngleRoll < 0 ? 0x4000 : -0x4000);
                     cap->oForwardVel = 10.0f;

@@ -31,7 +31,20 @@ extern const GeoLayout blue_coin_geo[];
 extern const GeoLayout blue_coin_no_shadow_geo[];
 extern const GeoLayout red_coin_geo[];
 extern const GeoLayout red_coin_no_shadow_geo[];
-extern Gfx coin_material_revert_render_settings[];
+extern const Gfx coin_seg3_dl_03007780[];
+extern const Gfx coin_seg3_dl_030077D0[];
+extern const Gfx coin_seg3_dl_03007800[];
+extern const Gfx coin_seg3_dl_03007828[];
+extern const Gfx coin_seg3_dl_03007850[];
+extern const Gfx coin_seg3_dl_03007878[];
+extern const Gfx coin_seg3_dl_030078A0[];
+extern const Gfx coin_seg3_dl_030078C8[];
+extern const Gfx coin_seg3_dl_030078F0[];
+extern const Gfx coin_seg3_dl_03007918[];
+extern const Gfx coin_seg3_dl_03007940[];
+extern const Gfx coin_seg3_dl_03007968[];
+extern const Gfx coin_seg3_dl_03007990[];
+extern const Gfx coin_seg3_dl_030079B8[];
 
 // dirt
 extern const GeoLayout dirt_animation_geo[];
@@ -212,8 +225,8 @@ extern const Gfx tree_seg3_dl_03032170[];
 extern const Gfx tree_seg3_dl_03033258[];
 
 // warp_collision
-extern const s16 door_seg3_collision_0301CE78[];
-extern const s16 lll_hexagonal_mesh_seg3_collision_0301CECC[];
+extern const Collision door_seg3_collision_0301CE78[];
+extern const Collision lll_hexagonal_mesh_seg3_collision_0301CECC[];
 
 // warp_pipe
 extern const GeoLayout warp_pipe_geo[];
@@ -222,7 +235,7 @@ extern const Gfx warp_pipe_seg3_dl_03008F98[];
 extern const Gfx warp_pipe_seg3_dl_03009968[];
 extern const Gfx warp_pipe_seg3_dl_03009A20[];
 extern const Gfx warp_pipe_seg3_dl_03009A50[];
-extern const s16 warp_pipe_seg3_collision_03009AC8[];
+extern const Collision warp_pipe_seg3_collision_03009AC8[];
 
 // white_particle
 extern const GeoLayout white_particle_geo[];
@@ -235,30 +248,6 @@ extern const Gfx wooden_signpost_seg3_dl_0302DA48[];
 extern const Gfx wooden_signpost_seg3_dl_0302DC40[];
 extern const Gfx wooden_signpost_seg3_dl_0302DCD0[];
 extern const Gfx wooden_signpost_seg3_dl_0302DD08[];
-extern const s16 wooden_signpost_seg3_collision_0302DD80[];
-
-#include "warp_pipe/geo_header.h"
-
-#include "star/geo_header.h"
-
-#include "mushroom_1up/geo_header.h"
-
-#include "bowser_key/geo_header.h"
-
-#include "transparent_star/geo_header.h"
-
-#include "mario_cap/geo_header.h"
-
-#include "coin/geo_header.h"
-
-#include "tree/geo_header.h"
-
-#include "door/geo_header.h"
-
-#include "warp_pipe_boo/geo_header.h"
-
-#include "boo_key/geo_header.h"
-
-#include "luigi_cap/geo_header.h"
+extern const Collision wooden_signpost_seg3_collision_0302DD80[];
 
 #endif

@@ -21,5 +21,3 @@ UNUSED static const u64 binid_2 = 2;
 #include "tornado/model.inc.c"
 #include "tornado/geo.inc.c"
 UNUSED static const u64 binid_3 = 3;
-
-#include "pokey_body_part/model.inc.c"
