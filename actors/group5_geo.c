@@ -10,3 +10,5 @@
 #include "klepto/geo.inc.c"
 #include "eyerok/geo.inc.c"
 #include "pokey/geo.inc.c"
+
+#include "pokey_body_part/geo.inc.c"
